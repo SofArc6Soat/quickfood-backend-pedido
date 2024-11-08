@@ -11,7 +11,7 @@ namespace Core.WebApi.Configurations
         public static void AddSwaggerConfig(this IServiceCollection services) =>
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "API QuickFood", Version = "v1" });
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "API QuickFood - Pedido", Version = "v1" });
 
                 c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {

@@ -20,6 +20,7 @@
   <ItemGroup>
     <ProjectReference Include="..\BuildingBlocks\Core.WebApi\Core.WebApi.csproj" />
     <ProjectReference Include="..\Controllers\Controllers.csproj" />
+    <ProjectReference Include="..\Worker\Worker.csproj" />
   </ItemGroup>
 
   <ItemGroup>
