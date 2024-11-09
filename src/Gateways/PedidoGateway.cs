@@ -1,11 +1,13 @@
-﻿using Domain.Entities;
+﻿using Core.Infra.MessageBroker;
+using Domain.Entities;
 using Domain.ValueObjects;
+using Gateways.Dtos.Events;
 using Infra.Dto;
 using Infra.Repositories;
 
 namespace Gateways
 {
-    public class PedidoGateway(IPedidoRepository pedidoRepository) : IPedidoGateway
+    public class PedidoGateway(IPedidoRepository pedidoRepository, ISqsService<PedidoCriadoEvent> sqsPedidoCriado) : IPedidoGateway
     {
         public async Task<bool> CadastrarPedidoAsync(Pedido pedido, CancellationToken cancellationToken)
         {
@@ -32,7 +34,7 @@ namespace Gateways
 
             await pedidoRepository.InsertAsync(pedidoDto, cancellationToken);
 
-            return await pedidoRepository.UnitOfWork.CommitAsync(cancellationToken);
+            return await pedidoRepository.UnitOfWork.CommitAsync(cancellationToken) && await sqsPedidoCriado.SendMessageAsync(GerarPedidoCriadoEvent(pedidoDto));
         }
 
         public async Task<Pedido?> ObterPedidoAsync(Guid id, CancellationToken cancellationToken)
@@ -77,5 +79,15 @@ namespace Gateways
 
         public async Task<string> ObterTodosPedidosAsync(CancellationToken cancellationToken) =>
             await pedidoRepository.ObterTodosPedidosAsync(cancellationToken);
+
+        private static PedidoCriadoEvent GerarPedidoCriadoEvent(PedidoDb pedidoDb) => new()
+        {
+            Id = pedidoDb.Id,
+            NumeroPedido = pedidoDb.NumeroPedido,
+            ClienteId = pedidoDb.ClienteId,
+            Status = pedidoDb.Status,
+            ValorTotal = pedidoDb.ValorTotal,
+            DataPedido = pedidoDb.DataPedido
+        };
     }
 }

@@ -8,7 +8,7 @@ using Worker.Dtos.Events;
 
 namespace Worker
 {
-    public class ProdutoCriadoBackgroundService(ISqsService<ProdutoCriadoEvent> sqsClient, IServiceScopeFactory serviceScopeFactory, ILogger<ProdutoCriadoBackgroundService> logger) : BackgroundService
+    public class ProdutoAtualizadoBackgroundService(ISqsService<ProdutoAtualizadoEvent> sqsClient, IServiceScopeFactory serviceScopeFactory, ILogger<ProdutoAtualizadoBackgroundService> logger) : BackgroundService
     {
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -27,7 +27,7 @@ namespace Worker
             }
         }
 
-        private async Task ProcessMessageAsync(ProdutoCriadoEvent? message, CancellationToken cancellationToken)
+        private async Task ProcessMessageAsync(ProdutoAtualizadoEvent? message, CancellationToken cancellationToken)
         {
             if (message is not null)
             {
@@ -36,14 +36,14 @@ namespace Worker
 
                 var produtoExistente = await produtoRepository.FindByIdAsync(message.Id, cancellationToken);
 
-                if (produtoExistente is null)
+                if (produtoExistente is not null)
                 {
-                    await produtoRepository.InsertAsync(ConvertMessageToDb(message), cancellationToken);
+                    await produtoRepository.UpdateAsync(ConvertMessageToDb(message), cancellationToken);
                 }
             }
         }
 
-        private static ProdutoDb ConvertMessageToDb(ProdutoCriadoEvent message) =>
+        private static ProdutoDb ConvertMessageToDb(ProdutoAtualizadoEvent message) =>
             new()
             {
                 Id = message.Id, 

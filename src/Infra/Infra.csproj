@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\BuildingBlocks\Cora.Infra\Cora.Infra.csproj" />
+    <ProjectReference Include="..\BuildingBlocks\Core.Infra\Core.Infra.csproj" />
   </ItemGroup>
 
   <ItemGroup>

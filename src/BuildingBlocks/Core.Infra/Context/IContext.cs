@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using System.Data.Common;
 
-namespace Cora.Infra.Context
+namespace Core.Infra.Context
 {
     public interface IContext : IUnitOfWork
     {

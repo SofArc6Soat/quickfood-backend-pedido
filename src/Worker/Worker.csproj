@@ -13,7 +13,7 @@
   <ItemGroup>
     <ProjectReference Include="..\BuildingBlocks\Core.Infra.MessageBroker\Core.Infra.MessageBroker.csproj" />
     <ProjectReference Include="..\Domain\Domain.csproj" />
-    <ProjectReference Include="..\Gateways\Gateways.csproj" />
+    <ProjectReference Include="..\Infra\Infra.csproj" />
   </ItemGroup>
 
 </Project>

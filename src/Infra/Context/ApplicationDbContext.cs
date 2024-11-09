@@ -1,4 +1,4 @@
-﻿using Cora.Infra.Context;
+﻿using Core.Infra.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System.Data.Common;

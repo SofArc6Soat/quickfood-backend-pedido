@@ -47,10 +47,7 @@ namespace Api
 
             var sqsQueues = new Queues
             {
-                QueueProdutoCriadoEvent = settings.AwsSqsSettings.QueueProdutoCriadoEvent,
-                QueueProdutoAtualizadoEvent = settings.AwsSqsSettings.QueueProdutoAtualizadoEvent,
-                QueueProdutoExcluidoEvent = settings.AwsSqsSettings.QueueProdutoExcluidoEvent,
-                QueueClienteCriadoEvent = settings.AwsSqsSettings.QueueClienteCriadoEvent
+                QueuePedidoCriadoPagamentoEvent = settings.AwsSqsSettings.QueuePedidoCriadoPagamentoEvent
             };
 
             services.AddGatewayDependencyServices(settings.ConnectionStrings.DefaultConnection, sqsQueues);
@@ -59,8 +56,7 @@ namespace Api
             {
                 QueueProdutoCriadoEvent = settings.AwsSqsSettings.QueueProdutoCriadoEvent,
                 QueueProdutoAtualizadoEvent = settings.AwsSqsSettings.QueueProdutoAtualizadoEvent,
-                QueueProdutoExcluidoEvent = settings.AwsSqsSettings.QueueProdutoExcluidoEvent,
-                QueueClienteCriadoEvent = settings.AwsSqsSettings.QueueClienteCriadoEvent
+                QueueProdutoExcluidoEvent = settings.AwsSqsSettings.QueueProdutoExcluidoEvent
             };
 
             services.AddWorkerDependencyServices(workerQueues);
