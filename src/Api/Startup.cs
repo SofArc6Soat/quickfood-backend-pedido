@@ -5,6 +5,9 @@ using Core.WebApi.DependencyInjection;
 using Gateways.DependencyInjection;
 using Infra.Context;
 using System.Diagnostics.CodeAnalysis;
+using Worker.DependencyInjection;
+using static Gateways.DependencyInjection.ServiceCollectionExtensions;
+using static Worker.DependencyInjection.ServiceCollectionExtensions;
 
 namespace Api
 {
@@ -41,7 +44,24 @@ namespace Api
             services.AddHealthCheckConfig(settings.ConnectionStrings.DefaultConnection);
 
             services.AddControllerDependencyServices();
-            services.AddGatewayDependencyServices(settings.ConnectionStrings.DefaultConnection);
+
+            var sqsQueues = new Queues
+            {
+                QueuePedidoCriadoPagamentoEvent = settings.AwsSqsSettings.QueuePedidoCriadoPagamentoEvent
+            };
+
+            services.AddGatewayDependencyServices(settings.ConnectionStrings.DefaultConnection, sqsQueues);
+
+            var workerQueues = new WorkerQueues
+            {
+                QueueProdutoCriadoEvent = settings.AwsSqsSettings.QueueProdutoCriadoEvent,
+                QueueProdutoAtualizadoEvent = settings.AwsSqsSettings.QueueProdutoAtualizadoEvent,
+                QueueProdutoExcluidoEvent = settings.AwsSqsSettings.QueueProdutoExcluidoEvent,
+                QueuePedidoPendentePagamentoEvent = settings.AwsSqsSettings.QueuePedidoPendentePagamentoEvent,
+                QueuePedidoPagoEvent = settings.AwsSqsSettings.QueuePedidoPagoEvent
+            };
+
+            services.AddWorkerDependencyServices(workerQueues);
         }
 
         public static void Configure(IApplicationBuilder app, ApplicationDbContext context)

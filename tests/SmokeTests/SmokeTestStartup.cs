@@ -1,6 +1,4 @@
 ﻿using Api;
-using Controllers;
-using Gateways;
 using Infra.Context;
 using Infra.DependencyInjection;
 using Microsoft.AspNetCore.Hosting;

@@ -1,12 +1,12 @@
-﻿using Cora.Infra.Context;
-using Core.Domain.Data;
+﻿using Core.Domain.Data;
 using Core.Domain.Entities;
+using Core.Infra.Context;
 using Microsoft.EntityFrameworkCore;
 using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 
-namespace Cora.Infra.Repository
+namespace Core.Infra.Repository
 {
     [ExcludeFromCodeCoverage]
     public abstract class RepositoryGeneric<TEntity>(IContext context) : IRepositoryGeneric<TEntity>

@@ -1,4 +1,4 @@
-﻿using Cora.Infra.Repository;
+﻿using Core.Infra.Repository;
 using Infra.Context;
 using Infra.Dto;
 using Microsoft.EntityFrameworkCore;
