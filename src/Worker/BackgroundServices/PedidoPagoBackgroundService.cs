@@ -1,14 +1,13 @@
 ﻿using Core.Infra.MessageBroker;
-using Infra.Dto;
 using Infra.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Worker.Dtos.Events;
 
-namespace Worker
+namespace Worker.BackgroundServices
 {
-    public class ProdutoExcluidoBackgroundService(ISqsService<ProdutoExcluidoEvent> sqsClient, IServiceScopeFactory serviceScopeFactory, ILogger<ProdutoExcluidoBackgroundService> logger) : BackgroundService
+    public class PedidoPagoBackgroundService(ISqsService<PedidoPagoEvent> sqsClient, IServiceScopeFactory serviceScopeFactory, ILogger<PedidoPagoBackgroundService> logger) : BackgroundService
     {
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -27,18 +26,20 @@ namespace Worker
             }
         }
 
-        private async Task ProcessMessageAsync(ProdutoExcluidoEvent? message, CancellationToken cancellationToken)
+        private async Task ProcessMessageAsync(PedidoPagoEvent? message, CancellationToken cancellationToken)
         {
-            if (message is not null)
+            if (message is not null && message.Status.Equals("Pago"))
             {
                 using var scope = serviceScopeFactory.CreateScope();
-                var produtoRepository = scope.ServiceProvider.GetRequiredService<IProdutoRepository>();
+                var pedidoRepository = scope.ServiceProvider.GetRequiredService<IPedidoRepository>();
 
-                var produtoExistente = await produtoRepository.FindByIdAsync(message.Id, cancellationToken);
+                var pedidoExistente = await pedidoRepository.FindByIdAsync(message.PedidoId, cancellationToken);
 
-                if (produtoExistente is not null)
+                if (pedidoExistente is not null)
                 {
-                    await produtoRepository.DeleteAsync(message.Id, cancellationToken);
+                    pedidoExistente.Status = "Pago";
+                    await pedidoRepository.UpdateAsync(pedidoExistente, cancellationToken);
+                    await pedidoRepository.UnitOfWork.CommitAsync(cancellationToken);
                 }
             }
         }

@@ -39,6 +39,9 @@ namespace Api.Configuration
         public string QueueProdutoAtualizadoEvent { get; set; } = string.Empty;
         public string QueueProdutoExcluidoEvent { get; set; } = string.Empty;
         public string QueuePedidoCriadoPagamentoEvent { get; set; } = string.Empty;
+
+        public string QueuePedidoPagoEvent { get; set; } = string.Empty;
+        public string QueuePedidoPendentePagamentoEvent { get; set; } = string.Empty;
     }
 
     [ExcludeFromCodeCoverage]

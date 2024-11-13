@@ -1,14 +1,13 @@
 ﻿using Core.Infra.MessageBroker;
-using Infra.Dto;
 using Infra.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Worker.Dtos.Events;
 
-namespace Worker
+namespace Worker.BackgroundServices
 {
-    public class ProdutoAtualizadoBackgroundService(ISqsService<ProdutoAtualizadoEvent> sqsClient, IServiceScopeFactory serviceScopeFactory, ILogger<ProdutoAtualizadoBackgroundService> logger) : BackgroundService
+    public class ProdutoExcluidoBackgroundService(ISqsService<ProdutoExcluidoEvent> sqsClient, IServiceScopeFactory serviceScopeFactory, ILogger<ProdutoExcluidoBackgroundService> logger) : BackgroundService
     {
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -27,7 +26,7 @@ namespace Worker
             }
         }
 
-        private async Task ProcessMessageAsync(ProdutoAtualizadoEvent? message, CancellationToken cancellationToken)
+        private async Task ProcessMessageAsync(ProdutoExcluidoEvent? message, CancellationToken cancellationToken)
         {
             if (message is not null)
             {
@@ -38,20 +37,10 @@ namespace Worker
 
                 if (produtoExistente is not null)
                 {
-                    await produtoRepository.UpdateAsync(ConvertMessageToDb(message), cancellationToken);
+                    await produtoRepository.DeleteAsync(message.Id, cancellationToken);
+                    await produtoRepository.UnitOfWork.CommitAsync(cancellationToken);
                 }
             }
         }
-
-        private static ProdutoDb ConvertMessageToDb(ProdutoAtualizadoEvent message) =>
-            new()
-            {
-                Id = message.Id, 
-                Nome = message.Nome, 
-                Descricao = message.Descricao, 
-                Preco = message.Preco, 
-                Categoria = message.Categoria.ToString(), 
-                Ativo = message.Ativo
-            };
     }
 }

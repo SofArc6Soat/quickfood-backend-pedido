@@ -6,9 +6,6 @@ namespace UseCases.DependencyInjection
     [ExcludeFromCodeCoverage]
     public static class ServiceCollectionExtensions
     {
-        public static void AddUseCasesDependencyServices(this IServiceCollection services)
-        {
-            services.AddScoped<IPedidoUseCase, PedidoUseCase>();
-        }
+        public static void AddUseCasesDependencyServices(this IServiceCollection services) => services.AddScoped<IPedidoUseCase, PedidoUseCase>();
     }
 }

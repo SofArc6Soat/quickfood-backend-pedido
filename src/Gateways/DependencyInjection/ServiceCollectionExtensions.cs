@@ -1,10 +1,10 @@
-﻿using Infra.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection;
-using System.Diagnostics.CodeAnalysis;
+﻿using Amazon.SQS;
+using Core.Infra.MessageBroker;
 using Core.Infra.MessageBroker.DependencyInjection;
 using Gateways.Dtos.Events;
-using Core.Infra.MessageBroker;
-using Amazon.SQS;
+using Infra.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Gateways.DependencyInjection
 {

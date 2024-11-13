@@ -1,5 +1,4 @@
 ﻿using Core.Domain.Entities;
-using Domain.ValueObjects;
 
 namespace Gateways.Dtos.Events
 {

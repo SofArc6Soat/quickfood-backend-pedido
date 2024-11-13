@@ -6,7 +6,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Worker.Dtos.Events;
 
-namespace Worker
+namespace Worker.BackgroundServices
 {
     public class ProdutoCriadoBackgroundService(ISqsService<ProdutoCriadoEvent> sqsClient, IServiceScopeFactory serviceScopeFactory, ILogger<ProdutoCriadoBackgroundService> logger) : BackgroundService
     {
@@ -39,6 +39,7 @@ namespace Worker
                 if (produtoExistente is null)
                 {
                     await produtoRepository.InsertAsync(ConvertMessageToDb(message), cancellationToken);
+                    await produtoRepository.UnitOfWork.CommitAsync(cancellationToken);
                 }
             }
         }
@@ -46,11 +47,11 @@ namespace Worker
         private static ProdutoDb ConvertMessageToDb(ProdutoCriadoEvent message) =>
             new()
             {
-                Id = message.Id, 
-                Nome = message.Nome, 
-                Descricao = message.Descricao, 
-                Preco = message.Preco, 
-                Categoria = message.Categoria.ToString(), 
+                Id = message.Id,
+                Nome = message.Nome,
+                Descricao = message.Descricao,
+                Preco = message.Preco,
+                Categoria = message.Categoria.ToString(),
                 Ativo = message.Ativo
             };
     }
