@@ -76,7 +76,7 @@ namespace Infra.Migrations
             migrationBuilder.InsertData(
                 schema: "dbo",
                 table: "Produtos",
-                columns: new[] { "Id", "Ativo", "Categoria", "Descricao", "Nome", "Preco" },
+                columns: ["Id", "Ativo", "Categoria", "Descricao", "Nome", "Preco"],
                 values: new object[,]
                 {
                     { new Guid("111cb598-2df6-41bf-b51b-d4e0f292bda3"), true, "Bebida", "350ml", "PEPSI LATA", 7m },

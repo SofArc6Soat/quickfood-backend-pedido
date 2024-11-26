@@ -56,61 +56,6 @@ namespace Domain.Entities
 
         private void CalcularValorPedido() =>
             ValorTotal = PedidoItems.Sum(p => p.CalcularValor());
-
-        public bool EfetuarCheckout()
-        {
-            if (Status == PedidoStatus.Rascunho)
-            {
-                Status = PedidoStatus.PendentePagamento;
-                return true;
-            }
-
-            return false;
-        }
-
-        public bool AlterarStatusParaRecebibo()
-        {
-            if (Status == PedidoStatus.PendentePagamento)
-            {
-                Status = PedidoStatus.Recebido;
-                return true;
-            }
-
-            return false;
-        }
-
-        public bool AlterarStatus(PedidoStatus novoStatus)
-        {
-            switch (Status)
-            {
-                case PedidoStatus.Recebido:
-                    if (novoStatus == PedidoStatus.EmPreparacao)
-                    {
-                        Status = novoStatus;
-                        return true;
-                    }
-
-                    break;
-                case PedidoStatus.EmPreparacao:
-                    if (novoStatus == PedidoStatus.Pronto)
-                    {
-                        Status = novoStatus;
-                        return true;
-                    }
-
-                    break;
-                case PedidoStatus.Pronto:
-                    if (novoStatus == PedidoStatus.Finalizado)
-                    {
-                        Status = novoStatus;
-                        return true;
-                    }
-
-                    break;
-            }
-
-            return false;
-        }
     }
 
     public class ValidarPedido : AbstractValidator<Pedido>

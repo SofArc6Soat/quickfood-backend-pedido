@@ -42,6 +42,8 @@ namespace Api.Configuration
 
         public string QueuePedidoPagoEvent { get; set; } = string.Empty;
         public string QueuePedidoPendentePagamentoEvent { get; set; } = string.Empty;
+        public string QueuePedidoRecebidoEvent { get; set; } = string.Empty;
+        public string QueuePedidoStatusAlteradoEvent { get; set; } = string.Empty;
     }
 
     [ExcludeFromCodeCoverage]

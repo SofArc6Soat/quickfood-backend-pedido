@@ -21,12 +21,15 @@ namespace Worker.DependencyInjection
             services.AddSingleton<ISqsService<ProdutoExcluidoEvent>>(provider => new SqsService<ProdutoExcluidoEvent>(provider.GetRequiredService<IAmazonSQS>(), queues.QueueProdutoExcluidoEvent));
             services.AddSingleton<ISqsService<PedidoPendentePagamentoEvent>>(provider => new SqsService<PedidoPendentePagamentoEvent>(provider.GetRequiredService<IAmazonSQS>(), queues.QueuePedidoPendentePagamentoEvent));
             services.AddSingleton<ISqsService<PedidoPagoEvent>>(provider => new SqsService<PedidoPagoEvent>(provider.GetRequiredService<IAmazonSQS>(), queues.QueuePedidoPagoEvent));
+            services.AddSingleton<ISqsService<PedidoRecebidoEvent>>(provider => new SqsService<PedidoRecebidoEvent>(provider.GetRequiredService<IAmazonSQS>(), queues.QueuePedidoRecebidoEvent));
+            services.AddSingleton<ISqsService<PedidoStatusAlteradoEvent>>(provider => new SqsService<PedidoStatusAlteradoEvent>(provider.GetRequiredService<IAmazonSQS>(), queues.QueuePedidoStatusAlteradoEvent));
 
             services.AddHostedService<ProdutoCriadoBackgroundService>();
             services.AddHostedService<ProdutoAtualizadoBackgroundService>();
             services.AddHostedService<ProdutoExcluidoBackgroundService>();
             services.AddHostedService<PedidoPedentePgtoBackgroundService>();
             services.AddHostedService<PedidoPagoBackgroundService>();
+            services.AddHostedService<PedidoStatusAlteradoBackgroundService>();
         }
     }
 
@@ -38,5 +41,7 @@ namespace Worker.DependencyInjection
         public string QueueProdutoExcluidoEvent { get; set; } = string.Empty;
         public string QueuePedidoPagoEvent { get; set; } = string.Empty;
         public string QueuePedidoPendentePagamentoEvent { get; set; } = string.Empty;
+        public string QueuePedidoRecebidoEvent { get; set; } = string.Empty;
+        public string QueuePedidoStatusAlteradoEvent { get; set; } = string.Empty;
     }
 }
