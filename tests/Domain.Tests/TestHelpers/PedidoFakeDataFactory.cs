@@ -20,8 +20,8 @@ public static class PedidoFakeDataFactory
         Status = PedidoStatus.Rascunho.ToString(),
         ValorTotal = 100.00m,
         DataPedido = DateTime.Now,
-        Itens =
-        [
+        Itens = new List<PedidoItemDb>
+        {
             new PedidoItemDb
             {
                 PedidoId = ObterGuid(),
@@ -29,10 +29,14 @@ public static class PedidoFakeDataFactory
                 Quantidade = 2,
                 ValorUnitario = 10.00m
             }
-        ]
+        }
     };
 
     public static Guid ObterGuid() => Guid.Parse("d290f1ee-6c54-4b01-90e6-d701748f0851");
+
     public static Guid ObterClienteGuid() => Guid.Parse("d290f1ee-6c54-4b01-90e6-d701748f0851");
+
     public static Guid ObterNovoGuid() => Guid.Parse("e2a1f1ee-7c54-4b01-90e6-d701748f0852");
+
+    public static Guid ObterGuid2() => Guid.Parse("d290f1ee-6c54-4b01-90e6-d701748f0852");
 }
