@@ -19,7 +19,7 @@ namespace Domain.Entities
         {
             Id = id;
             ClienteId = clienteId;
-            _pedidoItems = [];
+            _pedidoItems = new List<PedidoItem>();
             Status = PedidoStatus.Rascunho;
             DataPedido = DateTime.Now;
         }
@@ -34,6 +34,7 @@ namespace Domain.Entities
             Status = status;
             ValorTotal = valorTotal;
             DataPedido = dataCricacao;
+            _pedidoItems = new List<PedidoItem>(); 
         }
 
         public void AdicionarItem(PedidoItem item)
