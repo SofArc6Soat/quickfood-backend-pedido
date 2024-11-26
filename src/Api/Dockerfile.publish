@@ -24,7 +24,6 @@ COPY ["src/Controllers/Controllers.csproj", "./src/Controllers/"]
 COPY ["src/Domain/Domain.csproj", "./src/Domain/"]
 #
 COPY ["src/Gateways/Gateways.csproj", "./src/Gateways/"]
-COPY ["src/Gateways.Cognito/Gateways.Cognito.csproj", "./src/Gateways.Cognito/"]
 #
 COPY ["src/Infra/Infra.csproj", "./src/Infra/"]
 
