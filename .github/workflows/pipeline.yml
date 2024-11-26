@@ -282,4 +282,4 @@ jobs:
 
       - name: Build and Push Docker Image
         id: build-docker-image
-        run: docker buildx build --push -t sofarc6soat/quickfood-backend:latest -f ./src/Api/Dockerfile.publish .
+        run: docker buildx build --push -t sofarc6soat/quickfood-backend-pedido:latest -f ./src/Api/Dockerfile.publish .

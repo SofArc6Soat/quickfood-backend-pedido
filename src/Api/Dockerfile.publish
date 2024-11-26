@@ -11,15 +11,22 @@ WORKDIR /src
 
 # Copiar arquivos de projeto e restaurar dependências
 COPY ["src/Api/Api.csproj", "./src/Api/"]
+#
 COPY ["src/Application/UseCases.csproj", "./src/UseCases/"]
-COPY ["src/BuildingBlocks/Cora.Infra/Cora.Infra.csproj", "./src/Cora.Infra/"]
+#
 COPY ["src/BuildingBlocks/Core.Domain/Core.Domain.csproj", "./src/Core.Domain/"]
+COPY ["src/BuildingBlocks/Core.Infra/Core.Infra.csproj", "./src/Core.Infra/"]
+COPY ["src/BuildingBlocks/Core.Infra.MessageBroker/Core.Infra.MessageBroker.csproj", "./src/Core.Infra.MessageBroker/"]
 COPY ["src/BuildingBlocks/Core.WebApi/Core.WebApi.csproj", "./src/Core.WebApi/"]
+#
 COPY ["src/Controllers/Controllers.csproj", "./src/Controllers/"]
+#
 COPY ["src/Domain/Domain.csproj", "./src/Domain/"]
+#
 COPY ["src/Gateways/Gateways.csproj", "./src/Gateways/"]
+COPY ["src/Gateways.Cognito/Gateways.Cognito.csproj", "./src/Gateways.Cognito/"]
+#
 COPY ["src/Infra/Infra.csproj", "./src/Infra/"]
-COPY ["src/Presenters/Presenters.csproj", "./src/Presenters/"]
 
 RUN dotnet restore "src/Api/Api.csproj"
 
