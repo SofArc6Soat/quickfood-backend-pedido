@@ -58,7 +58,9 @@ namespace Api
                 QueueProdutoAtualizadoEvent = settings.AwsSqsSettings.QueueProdutoAtualizadoEvent,
                 QueueProdutoExcluidoEvent = settings.AwsSqsSettings.QueueProdutoExcluidoEvent,
                 QueuePedidoPendentePagamentoEvent = settings.AwsSqsSettings.QueuePedidoPendentePagamentoEvent,
-                QueuePedidoPagoEvent = settings.AwsSqsSettings.QueuePedidoPagoEvent
+                QueuePedidoPagoEvent = settings.AwsSqsSettings.QueuePedidoPagoEvent,
+                QueuePedidoRecebidoEvent = settings.AwsSqsSettings.QueuePedidoRecebidoEvent,
+                QueuePedidoStatusAlteradoEvent = settings.AwsSqsSettings.QueuePedidoStatusAlteradoEvent
             };
 
             services.AddWorkerDependencyServices(workerQueues);

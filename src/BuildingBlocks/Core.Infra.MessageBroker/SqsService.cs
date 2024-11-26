@@ -41,7 +41,7 @@ namespace Core.Infra.MessageBroker
                 WaitTimeSeconds = 10
             };
 
-            var response = await sqsClient.ReceiveMessageAsync(receiveRequest);
+            var response = await sqsClient.ReceiveMessageAsync(receiveRequest, cancellationToken);
 
             foreach (var message in response.Messages)
             {
@@ -51,7 +51,7 @@ namespace Core.Infra.MessageBroker
 
                     var objeto = JsonSerializer.Deserialize<T>(message.Body);
 
-                    await sqsClient.DeleteMessageAsync(queueUrl, message.ReceiptHandle);
+                    await sqsClient.DeleteMessageAsync(queueUrl, message.ReceiptHandle, cancellationToken);
 
                     Console.WriteLine($"Objeto recebido: {JsonSerializer.Serialize(objeto, jsonOptions)}");
 

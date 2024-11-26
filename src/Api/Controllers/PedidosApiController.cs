@@ -40,18 +40,5 @@ namespace Api.Controllers
 
             return CustomResponsePost($"pedidos/{request.PedidoId}", request, result);
         }
-
-        [HttpPatch("status/{pedidoId:guid}")]
-        public async Task<IActionResult> AlterarStatus([FromRoute] Guid pedidoId, [FromBody] PedidoStatusRequestDto pedidoStatusDto, CancellationToken cancellationToken)
-        {
-            if (!ModelState.IsValid)
-            {
-                return ErrorBadRequestModelState(ModelState);
-            }
-
-            var result = await pedidoController.AlterarStatusAsync(pedidoId, pedidoStatusDto, cancellationToken);
-
-            return CustomResponsePutPatch(pedidoStatusDto, result);
-        }
     }
 }
