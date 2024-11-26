@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  quickfood-sqlserver:
+    container_name: quickfood-sqlserver
+    hostname: SqlServerDb
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    user: root
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "quickfood-backend#2024"
+      MSSQL_DATA_DIR: /var/opt/mssql/data
+      MSSQL_PID: 'Developer'
+      MSSQL_TCP_PORT: 1433
+    healthcheck:
+      test: [ "CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'quickfood-backend#2024' -C -Q 'SELECT 1' || exit 1" ]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+    networks:
+      - quickfood_network
+    ports:
+      - "1455:1433"
+    volumes:
+      - sql_data:/var/opt/mssql/data
+      - sql_logs:/var/opt/mssql/log
+      - sql_secrets:/var/opt/mssql/secrets
+    restart: always
+
+  quickfood-backend:
+    build:
+      context: ../../src
+      dockerfile: ./Api/Dockerfile
+    restart: always
+    image: quickfood-backend
+    container_name: quickfood-backend
+    depends_on:
+      quickfood-sqlserver:
+        condition: service_healthy
+    ports:
+      - 5000:80
+      - 5001:443
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=https://+:443;http://+:80
+      - ASPNETCORE_HTTPS_PORTS=443
+      - ASPNETCORE_HTTP_PORTS=80
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=quickfood
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/quickfood-certificate.pfx
+      - ConnectionStrings__DefaultConnection=Server=quickfood-sqlserver;Database=QuickFood;User Id=sa;Password=quickfood-backend#2024;Encrypt=False;Trust Server Certificate=True;Application Intent=ReadWrite;Multi Subnet Failover=False;
+      - CognitoSettings__ClientId=7gm6dtb4el84459oc4077j0ntt
+      - CognitoSettings__ClientSecret=174srm2o3dn5ibudq4fdi5s7mdp09h5kua7tdq7c60rok4nvm72k
+      - CognitoSettings__UserPoolId=us-east-1_4CETh5AA5
+      - CognitoSettings__Authority=https://cognito-idp.us-east-1.amazonaws.com/us-east-1_4CETh5AA5
+      - CognitoSettings__MetadataAddress=https://cognito-idp.us-east-1.amazonaws.com/us-east-1_4CETh5AA5/.well-known/openid-configuration
+    volumes:
+      - ./certs:/https:ro
+    networks:
+      - quickfood_network
+
+networks:
+  quickfood_network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.172.0.0/16
+          gateway: 172.172.0.1
+
+volumes:
+  sql_data: {}
+  sql_logs: {}
+  sql_secrets: {}

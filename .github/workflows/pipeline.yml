@@ -1,0 +1,285 @@
+name: .NET Core Tests and Deployments
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+  pull_request:
+    branches:
+      - develop
+
+jobs:
+  unit_test_develop:
+    if: github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v3
+
+      # Setup .NET Core SDK
+      - name: Setup .NET Core SDK
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
+
+      # Restore dependencies
+      - name: Restore dependencies
+        run: dotnet restore src/Api/Api.csproj
+
+      # Run unit tests
+      - name: Run unit tests
+        run: dotnet test tests/Domain.Tests/Domain.Tests.csproj
+
+  code_analysis_develop:
+    runs-on: ubuntu-latest
+    needs: unit_test_develop
+
+    steps:
+      - uses: actions/checkout@v3
+
+      # Setup .NET Core SDK
+      - name: Setup .NET Core SDK
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
+
+      # Restore dependencies
+      - name: Restore dependencies
+        run: dotnet restore src/Api/Api.csproj
+
+      # Cache SonarCloud packages 
+      - name: Cache SonarCloud packages 
+        uses: actions/cache@v3
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
+      # Cache SonarCloud scanner
+      - name: Cache SonarCloud scanner
+        id: cache-sonar-scanner
+        uses: actions/cache@v3
+        with:
+          path: ~/.sonar/scanner
+          key: ${{ runner.os }}-sonar-scanner
+          restore-keys: ${{ runner.os }}-sonar-scanner
+
+      - name: Install SonarCloud scanner
+        if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
+        run: |
+          dotnet tool install --global dotnet-sonarscanner
+          echo "{DOTNET_ROOT}/tools" >> $GITHUB_PATH
+
+      - name: Build and analyze
+        env:
+          GITHUB_TOKEN: ${{ secrets.REPO_TOKEN_GIT }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          dotnet-sonarscanner begin /k:"SofArc6Soat_quickfood-backend" /o:"sofarc6soat" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io"
+          dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=opencover -l trx
+          dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
+
+  deploy_develop:
+    if: github.ref == 'refs/heads/develop'
+    needs: code_analysis_develop
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v3
+
+      # Setup .NET Core SDK
+      - name: Setup .NET Core SDK
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
+
+      # Build application
+      - name: Build application
+        run: dotnet build src/Api/Api.csproj --configuration Release
+
+      # Deploy application (add your deploy steps here)
+      - name: Deploy application
+        run: |
+          echo "Deploying application..."
+          # Add your deploy commands here
+
+  smoketest_develop:
+    if: github.ref == 'refs/heads/develop'
+    needs: deploy_develop
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v3
+
+      # Setup .NET Core SDK
+      - name: Setup .NET Core SDK
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
+
+      # Install necessary tools for smoke testing
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl
+
+      # Run smoke tests
+      - name: Run smoke tests
+        run: dotnet test tests/SmokeTests/SmokeTests.csproj
+
+  # Main branch pipeline
+
+  unit_test_main:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v3
+
+      # Setup .NET Core SDK
+      - name: Setup .NET Core SDK
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
+
+      # Restore dependencies
+      - name: Restore dependencies
+        run: dotnet restore src/Api/Api.csproj
+
+      # Run unit tests Domain
+      - name: Run unit tests Domain
+        run: dotnet test tests/Domain.Tests/Domain.Tests.csproj
+        
+    # Run unit tests Gateways
+      - name: Run unit tests Gateways
+        run: dotnet test tests/Gateways.Tests/Gateways.Tests.csproj
+        
+    # Run unit tests Infra
+      - name: Run unit tests Infra
+        run: dotnet test tests/Infra.Tests/Infra.Tests.csproj
+
+  code_analysis_main:
+    runs-on: ubuntu-latest
+    needs: unit_test_main
+
+    steps:
+      - uses: actions/checkout@v3
+
+      # Setup .NET Core SDK
+      - name: Setup .NET Core SDK
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
+
+      # Restore dependencies
+      - name: Restore dependencies
+        run: dotnet restore src/Api/Api.csproj
+
+      # Cache SonarCloud packages 
+      - name: Cache SonarCloud packages 
+        uses: actions/cache@v3
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
+      # Cache SonarCloud scanner
+      - name: Cache SonarCloud scanner
+        id: cache-sonar-scanner
+        uses: actions/cache@v3
+        with:
+          path: ~/.sonar/scanner
+          key: ${{ runner.os }}-sonar-scanner
+          restore-keys: ${{ runner.os }}-sonar-scanner
+
+      - name: Install SonarCloud scanner
+        if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
+        run: |
+          dotnet tool install --global dotnet-sonarscanner
+          echo "{DOTNET_ROOT}/tools" >> $GITHUB_PATH
+
+      - name: Build and analyze
+        env:
+          GITHUB_TOKEN: ${{ secrets.REPO_TOKEN_GIT }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          dotnet-sonarscanner begin /k:"SofArc6Soat_quickfood-backend" /o:"sofarc6soat" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io"
+          dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=opencover -l trx
+          dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
+
+  deploy_main:
+    if: github.ref == 'refs/heads/main'
+    needs: code_analysis_main
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v3
+
+      # Setup .NET Core SDK
+      - name: Setup .NET Core SDK
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
+
+      # Build application
+      - name: Build application
+        run: dotnet build src/Api/Api.csproj --configuration Release
+
+      # Deploy application (add your deploy steps here)
+      - name: Deploy application
+        run: |
+          echo "Deploying application..."
+          # Add your deploy commands here
+
+  smoketest_main:
+    if: github.ref == 'refs/heads/main'
+    needs: deploy_main
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v3
+
+      # Setup .NET Core SDK
+      - name: Setup .NET Core SDK
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
+
+      # Install necessary tools for smoke testing
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl
+
+      # Run smoke tests
+      - name: Run smoke tests
+        run: dotnet test tests/SmokeTests/SmokeTests.csproj
+
+  publish_docker_image:
+    if: github.ref == 'refs/heads/main'
+    needs: smoketest_main
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v3
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2        
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and Push Docker Image
+        id: build-docker-image
+        run: docker buildx build --push -t sofarc6soat/quickfood-backend-pedido:latest -f ./src/Api/Dockerfile.publish .
