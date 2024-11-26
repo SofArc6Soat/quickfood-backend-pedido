@@ -3,6 +3,7 @@ using Moq;
 using Moq.Protected;
 using System.Net;
 using System.Net.Http.Json;
+using Xunit;
 
 namespace SmokeTests.SmokeTests;
 

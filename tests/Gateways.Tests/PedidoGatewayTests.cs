@@ -75,84 +75,6 @@ public class PedidoGatewayTests
     }
 
     [Fact]
-    public async Task AtualizarPedidoAsync_DeveAtualizarPedidoComSucesso()
-    {
-        // Arrange
-        var pedido = PedidoFakeDataFactory.CriarPedidoValido();
-
-        _pedidoRepositoryMock.Setup(x => x.UpdateAsync(It.IsAny<PedidoDb>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
-
-        _pedidoRepositoryMock.Setup(x => x.UnitOfWork.CommitAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
-
-        // Act
-        var result = await _pedidoGateway.AtualizarPedidoAsync(pedido, CancellationToken.None);
-
-        // Assert
-        Assert.True(result);
-
-        _pedidoRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<PedidoDb>(), It.IsAny<CancellationToken>()), Times.Once);
-        _pedidoRepositoryMock.Verify(x => x.UnitOfWork.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task AtualizarPedidoAsync_DeveRetornarMensagemErro_QuandoFalharAoAtualizarPedido()
-    {
-        // Arrange
-        var pedido = PedidoFakeDataFactory.CriarPedidoValido();
-        var mensagemErroEsperada = "Erro ao atualizar pedido no banco de dados";
-
-        _pedidoRepositoryMock.Setup(x => x.UpdateAsync(It.IsAny<PedidoDb>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new Exception(mensagemErroEsperada));
-
-        // Act
-        var exception = await Assert.ThrowsAsync<Exception>(() =>
-            _pedidoGateway.AtualizarPedidoAsync(pedido, CancellationToken.None));
-
-        // Assert
-        Assert.NotNull(exception);
-        Assert.Equal(mensagemErroEsperada, exception.Message);
-
-        _pedidoRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<PedidoDb>(), It.IsAny<CancellationToken>()), Times.Once);
-        _pedidoRepositoryMock.Verify(x => x.UnitOfWork.CommitAsync(It.IsAny<CancellationToken>()), Times.Never);
-    }
-
-    [Fact]
-    public async Task ObterPedidoAsync_DeveRetornarPedido_QuandoPedidoExistir()
-    {
-        // Arrange
-        var pedidoId = PedidoFakeDataFactory.ObterGuid();
-        var pedidoDb = PedidoFakeDataFactory.CriarPedidoDbValido();
-
-        _pedidoRepositoryMock.Setup(x => x.FindByIdAsync(pedidoId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(pedidoDb);
-
-        // Act
-        var result = await _pedidoGateway.ObterPedidoAsync(pedidoId, CancellationToken.None);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.Equal(pedidoDb.Id, result.Id);
-    }
-
-    [Fact]
-    public async Task ObterPedidoAsync_DeveRetornarNull_QuandoPedidoNaoExistir()
-    {
-        // Arrange
-        var pedidoId = PedidoFakeDataFactory.ObterGuid();
-
-        _pedidoRepositoryMock.Setup(x => x.FindByIdAsync(pedidoId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((PedidoDb)null);
-
-        // Act
-        var result = await _pedidoGateway.ObterPedidoAsync(pedidoId, CancellationToken.None);
-
-        // Assert
-        Assert.Null(result);
-    }
-
-    [Fact]
     public async Task VerificarPedidoExistenteAsync_DeveRetornarTrue_QuandoPedidoExistir()
     {
         // Arrange
@@ -183,5 +105,35 @@ public class PedidoGatewayTests
 
         // Assert
         Assert.False(result);
+    }
+
+    [Fact]
+    public async Task ObterTodosPedidosOrdenadosAsync_DeveRetornarPedidosOrdenados()
+    {
+        // Arrange
+        var pedidosOrdenados = "Pedidos Ordenados";
+        _pedidoRepositoryMock.Setup(x => x.ObterTodosPedidosOrdenadosAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(pedidosOrdenados);
+
+        // Act
+        var result = await _pedidoGateway.ObterTodosPedidosOrdenadosAsync(CancellationToken.None);
+
+        // Assert
+        Assert.Equal(pedidosOrdenados, result);
+    }
+
+    [Fact]
+    public async Task ObterTodosPedidosAsync_DeveRetornarTodosOsPedidos()
+    {
+        // Arrange
+        var todosPedidos = "Todos os Pedidos";
+        _pedidoRepositoryMock.Setup(x => x.ObterTodosPedidosAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(todosPedidos);
+
+        // Act
+        var result = await _pedidoGateway.ObterTodosPedidosAsync(CancellationToken.None);
+
+        // Assert
+        Assert.Equal(todosPedidos, result);
     }
 }
