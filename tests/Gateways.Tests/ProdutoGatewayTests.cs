@@ -46,7 +46,7 @@ public class ProdutoGatewayTests
     public async Task ObterProdutoAsync_DeveRetornarNull_QuandoProdutoNaoExistir()
     {
         // Arrange
-        var produtoId = ProdutoFakeDataFactory.ObterGuid();
+        var produtoId = ProdutoFakeDataFactory.ObterGuid3();
 
         _produtoRepositoryMock.Setup(x => x.FindByIdAsync(produtoId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((ProdutoDb)null);

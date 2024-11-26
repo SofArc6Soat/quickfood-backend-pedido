@@ -95,7 +95,7 @@ public class PedidoGatewayTests
     public async Task VerificarPedidoExistenteAsync_DeveRetornarFalse_QuandoPedidoNaoExistir()
     {
         // Arrange
-        var pedidoId = PedidoFakeDataFactory.ObterGuid();
+        var pedidoId = PedidoFakeDataFactory.ObterGuid2();
 
         _pedidoRepositoryMock.Setup(x => x.FindByIdAsync(pedidoId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((PedidoDb)null);
