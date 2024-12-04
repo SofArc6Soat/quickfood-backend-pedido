@@ -28,7 +28,7 @@ namespace Worker.BackgroundServices
             }
         }
 
-        private async Task ProcessMessageAsync(PedidoPagoEvent? message, CancellationToken cancellationToken)
+        public async Task ProcessMessageAsync(PedidoPagoEvent? message, CancellationToken cancellationToken)
         {
             if (message is not null && message.Status.Equals("Pago"))
             {

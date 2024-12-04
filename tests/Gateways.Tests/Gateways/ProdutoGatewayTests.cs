@@ -5,7 +5,7 @@ using Infra.Repositories;
 using Moq;
 using Worker.Dtos.Events;
 
-namespace Gateways.Tests;
+namespace Gateways.Tests.Gateways;
 
 public class ProdutoGatewayTests
 {
