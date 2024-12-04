@@ -26,6 +26,13 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore src/Api/Api.csproj
 
+      # Set AWS credentials and region for testing
+      - name: Set AWS environment variables
+        run: |
+          echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> $GITHUB_ENV
+          echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> $GITHUB_ENV
+          echo "AWS_REGION=${{ secrets.AWS_REGION }}" >> $GITHUB_ENV
+
       # Run unit tests
       - name: Run all tests
         run: dotnet test QuickFood-Pedido.sln --configuration Release --collect:"XPlat Code Coverage"
@@ -139,6 +146,13 @@ jobs:
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '8.0.x'
+
+      # Set AWS environment variables for Smoke Tests
+      - name: Set AWS environment variables for Smoke Test
+        run: |
+          echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> $GITHUB_ENV
+          echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> $GITHUB_ENV
+          echo "AWS_REGION=${{ secrets.AWS_REGION }}" >> $GITHUB_ENV
 
       # Run smoke tests
       - name: Run smoke tests
