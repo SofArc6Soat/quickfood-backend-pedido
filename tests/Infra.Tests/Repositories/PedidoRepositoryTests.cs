@@ -1,190 +1,144 @@
-﻿using Core.Domain.Data;
-using Domain.Tests.TestHelpers;
-using FluentAssertions;
+﻿using Dapper;
+using Infra.Context;
 using Infra.Dto;
 using Infra.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Moq;
+using System.Data;
+using System.Linq.Expressions;
 
 namespace Infra.Tests.Repositories;
 
 public class PedidoRepositoryTests
 {
-    private readonly Mock<IPedidoRepository> _mockPedidoRepository;
-    private readonly Mock<IUnitOfWork> _mockUnitOfWork;
+    private readonly PedidoRepository _pedidoRepository;
+    private readonly ApplicationDbContext _context;
+    private readonly Mock<IDbConnection> _dbConnectionMock;
+    private readonly Mock<IDapperWrapper> _dapperWrapperMock;
 
     public PedidoRepositoryTests()
     {
-        _mockPedidoRepository = new Mock<IPedidoRepository>();
-        _mockUnitOfWork = new Mock<IUnitOfWork>();
-        _mockPedidoRepository.Setup(repo => repo.UnitOfWork).Returns(_mockUnitOfWork.Object);
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseInMemoryDatabase(databaseName: "TestDatabase")
+            .Options;
+
+        _context = new ApplicationDbContext(options);
+        _dbConnectionMock = new Mock<IDbConnection>();
+        _dapperWrapperMock = new Mock<IDapperWrapper>();
+        _pedidoRepository = new PedidoRepository(_context);
     }
 
     [Fact]
-    public async Task ObterTodosPedidosOrdenadosAsync_DeveRetornarPedidosOrdenados()
+    public async Task FindByIdAsync_Should_ReturnPedido_When_PedidoExists()
     {
         // Arrange
-        var pedidosOrdenados = "Pedidos Ordenados";
-        var cancellationToken = CancellationToken.None;
-
-        _mockPedidoRepository.Setup(x => x.ObterTodosPedidosOrdenadosAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(pedidosOrdenados);
+        var pedidoId = Guid.NewGuid();
+        var pedido = new PedidoDb { Id = pedidoId, NumeroPedido = 123, ClienteId = Guid.NewGuid(), Status = "Recebido", ValorTotal = 100.0m, DataPedido = DateTime.UtcNow };
+        await _context.Set<PedidoDb>().AddAsync(pedido);
+        await _context.SaveChangesAsync();
 
         // Act
-        var resultado = await _mockPedidoRepository.Object.ObterTodosPedidosOrdenadosAsync(cancellationToken);
+        var result = await _pedidoRepository.FindByIdAsync(pedidoId, CancellationToken.None);
 
         // Assert
-        Assert.NotNull(resultado);
-        Assert.Equal(pedidosOrdenados, resultado);
-        _mockPedidoRepository.Verify(x => x.ObterTodosPedidosOrdenadosAsync(It.IsAny<CancellationToken>()), Times.Once);
+        Assert.NotNull(result);
+        Assert.Equal(pedidoId, result.Id);
     }
 
     [Fact]
-    public async Task ObterTodosPedidosOrdenadosAsync_DeveLancarExcecao_QuandoOcorreErro()
+    public async Task FindByIdAsync_Should_ReturnNull_When_PedidoDoesNotExist()
     {
         // Arrange
-        var cancellationToken = CancellationToken.None;
-
-        _mockPedidoRepository.Setup(x => x.ObterTodosPedidosOrdenadosAsync(It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new Exception("Erro ao obter pedidos ordenados"));
-
-        // Act & Assert
-        var exception = await Assert.ThrowsAsync<Exception>(() => _mockPedidoRepository.Object.ObterTodosPedidosOrdenadosAsync(cancellationToken));
-        Assert.Equal("Erro ao obter pedidos ordenados", exception.Message);
-        _mockPedidoRepository.Verify(x => x.ObterTodosPedidosOrdenadosAsync(It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task ObterTodosPedidosAsync_DeveRetornarTodosPedidos()
-    {
-        // Arrange
-        var todosPedidos = "Todos os Pedidos";
-        var cancellationToken = CancellationToken.None;
-
-        _mockPedidoRepository.Setup(x => x.ObterTodosPedidosAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(todosPedidos);
+        var pedidoId = Guid.NewGuid();
 
         // Act
-        var resultado = await _mockPedidoRepository.Object.ObterTodosPedidosAsync(cancellationToken);
+        var result = await _pedidoRepository.FindByIdAsync(pedidoId, CancellationToken.None);
 
         // Assert
-        Assert.NotNull(resultado);
-        Assert.Equal(todosPedidos, resultado);
-        _mockPedidoRepository.Verify(x => x.ObterTodosPedidosAsync(It.IsAny<CancellationToken>()), Times.Once);
+        Assert.Null(result);
     }
 
     [Fact]
-    public async Task ObterTodosPedidosAsync_DeveLancarExcecao_QuandoOcorreErro()
+    public async Task InsertAsync_Should_AddPedido()
     {
         // Arrange
-        var cancellationToken = CancellationToken.None;
-
-        _mockPedidoRepository.Setup(x => x.ObterTodosPedidosAsync(It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new Exception("Erro ao obter todos os pedidos"));
-
-        // Act & Assert
-        var exception = await Assert.ThrowsAsync<Exception>(() => _mockPedidoRepository.Object.ObterTodosPedidosAsync(cancellationToken));
-        Assert.Equal("Erro ao obter todos os pedidos", exception.Message);
-        _mockPedidoRepository.Verify(x => x.ObterTodosPedidosAsync(It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task FindByIdAsync_DeveRetornarPedidoPorId()
-    {
-        // Arrange
-        var pedidoDb = PedidoFakeDataFactory.CriarPedidoDbValido();
-        var cancellationToken = CancellationToken.None;
-
-        _mockPedidoRepository.Setup(x => x.FindByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(pedidoDb);
+        var pedido = new PedidoDb { Id = Guid.NewGuid(), NumeroPedido = 123, ClienteId = Guid.NewGuid(), Status = "Recebido", ValorTotal = 100.0m, DataPedido = DateTime.UtcNow };
 
         // Act
-        var resultado = await _mockPedidoRepository.Object.FindByIdAsync(pedidoDb.Id, cancellationToken);
+        await _pedidoRepository.InsertAsync(pedido, CancellationToken.None);
+        await _context.SaveChangesAsync();
 
         // Assert
-        Assert.NotNull(resultado);
-        Assert.Equal(pedidoDb.Id, resultado.Id);
-        _mockPedidoRepository.Verify(x => x.FindByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Once);
+        var result = await _context.Set<PedidoDb>().FindAsync(pedido.Id);
+        Assert.NotNull(result);
+        Assert.Equal(pedido.NumeroPedido, result.NumeroPedido);
     }
 
     [Fact]
-    public async Task FindByIdAsync_DeveLancarExcecao_QuandoOcorreErro()
+    public async Task UpdateAsync_Should_UpdatePedido()
     {
         // Arrange
-        var pedidoId = PedidoFakeDataFactory.ObterNovoGuid();
-        var cancellationToken = CancellationToken.None;
+        var pedido = new PedidoDb { Id = Guid.NewGuid(), NumeroPedido = 123, ClienteId = Guid.NewGuid(), Status = "Recebido", ValorTotal = 100.0m, DataPedido = DateTime.UtcNow };
+        await _context.Set<PedidoDb>().AddAsync(pedido);
+        await _context.SaveChangesAsync();
 
-        _mockPedidoRepository.Setup(x => x.FindByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new Exception("Erro ao encontrar pedido por ID"));
-
-        // Act & Assert
-        var exception = await Assert.ThrowsAsync<Exception>(() => _mockPedidoRepository.Object.FindByIdAsync(pedidoId, cancellationToken));
-        Assert.Equal("Erro ao encontrar pedido por ID", exception.Message);
-        _mockPedidoRepository.Verify(x => x.FindByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task InsertAsync_DeveInserirPedido()
-    {
-        // Arrange
-        var pedidoDb = PedidoFakeDataFactory.CriarPedidoDbValido();
-        var cancellationToken = CancellationToken.None;
-
-        _mockPedidoRepository.Setup(x => x.InsertAsync(It.IsAny<PedidoDb>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
+        pedido.Status = "Pronto";
 
         // Act
-        await _mockPedidoRepository.Object.InsertAsync(pedidoDb, cancellationToken);
+        await _pedidoRepository.UpdateAsync(pedido, CancellationToken.None);
+        await _context.SaveChangesAsync();
 
         // Assert
-        _mockPedidoRepository.Verify(x => x.InsertAsync(It.IsAny<PedidoDb>(), It.IsAny<CancellationToken>()), Times.Once);
+        var result = await _context.Set<PedidoDb>().FindAsync(pedido.Id);
+        Assert.NotNull(result);
+        Assert.Equal("Pronto", result.Status);
     }
 
     [Fact]
-    public async Task InsertAsync_DeveLancarExcecao_QuandoOcorreErro()
+    public async Task DeleteAsync_Should_RemovePedido()
     {
         // Arrange
-        var pedidoDb = PedidoFakeDataFactory.CriarPedidoDbValido();
-        var cancellationToken = CancellationToken.None;
-
-        _mockPedidoRepository.Setup(x => x.InsertAsync(It.IsAny<PedidoDb>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new Exception("Erro ao inserir pedido"));
-
-        // Act & Assert
-        var exception = await Assert.ThrowsAsync<Exception>(() => _mockPedidoRepository.Object.InsertAsync(pedidoDb, cancellationToken));
-        Assert.Equal("Erro ao inserir pedido", exception.Message);
-        _mockPedidoRepository.Verify(x => x.InsertAsync(It.IsAny<PedidoDb>(), It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task DeleteAsync_DeveDeletarPedido()
-    {
-        // Arrange
-        var pedidoDb = PedidoFakeDataFactory.CriarPedidoDbValido();
-        var cancellationToken = CancellationToken.None;
-
-        _mockPedidoRepository.Setup(x => x.DeleteAsync(It.IsAny<PedidoDb>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
+        var pedido = new PedidoDb { Id = Guid.NewGuid(), NumeroPedido = 123, ClienteId = Guid.NewGuid(), Status = "Recebido", ValorTotal = 100.0m, DataPedido = DateTime.UtcNow };
+        await _context.Set<PedidoDb>().AddAsync(pedido);
+        await _context.SaveChangesAsync();
 
         // Act
-        await _mockPedidoRepository.Object.DeleteAsync(pedidoDb, cancellationToken);
+        await _pedidoRepository.DeleteAsync(pedido.Id, CancellationToken.None);
+        await _context.SaveChangesAsync();
 
         // Assert
-        _mockPedidoRepository.Verify(x => x.DeleteAsync(It.IsAny<PedidoDb>(), It.IsAny<CancellationToken>()), Times.Once);
+        var result = await _context.Set<PedidoDb>().FindAsync(pedido.Id);
+        Assert.Null(result);
     }
 
     [Fact]
-    public async Task DeleteAsync_DeveLancarExcecao_QuandoOcorreErro()
+    public async Task CommitAsync_Should_CommitTransaction()
     {
         // Arrange
-        var pedidoDb = PedidoFakeDataFactory.CriarPedidoDbValido();
-        var cancellationToken = CancellationToken.None;
+        var pedido = new PedidoDb { Id = Guid.NewGuid(), NumeroPedido = 123, ClienteId = Guid.NewGuid(), Status = "Recebido", ValorTotal = 100.0m, DataPedido = DateTime.UtcNow };
+        await _context.Set<PedidoDb>().AddAsync(pedido);
 
-        _mockPedidoRepository.Setup(x => x.DeleteAsync(It.IsAny<PedidoDb>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new Exception("Erro ao deletar pedido"));
+        // Act
+        var result = await _context.CommitAsync(CancellationToken.None);
 
-        // Act & Assert
-        var exception = await Assert.ThrowsAsync<Exception>(() => _mockPedidoRepository.Object.DeleteAsync(pedidoDb, cancellationToken));
-        Assert.Equal("Erro ao deletar pedido", exception.Message);
-        _mockPedidoRepository.Verify(x => x.DeleteAsync(It.IsAny<PedidoDb>(), It.IsAny<CancellationToken>()), Times.Once);
+        // Assert
+        Assert.True(result);
+        var savedPedido = await _context.Set<PedidoDb>().FindAsync(pedido.Id);
+        Assert.NotNull(savedPedido);
+    }
+}
+
+public interface IDapperWrapper
+{
+    Task<T> QueryFirstOrDefaultAsync<T>(IDbConnection connection, string sql, object param = null, IDbTransaction transaction = null, int? commandTimeout = null, CommandType? commandType = null);
+}
+
+public static class DapperMockExtensions
+{
+    public static void SetupDapperAsync<TMock, TResult>(this Mock<TMock> mock,
+        Expression<Func<TMock, Task<TResult>>> expression, TResult result)
+        where TMock : class, IDapperWrapper
+    {
+        mock.Setup(expression).ReturnsAsync(result);
     }
 }
