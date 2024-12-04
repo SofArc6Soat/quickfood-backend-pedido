@@ -1,4 +1,4 @@
-- [Aplicação Quickfood (backend)](#aplicação-quickfood-backend)
+- [Aplicação Quickfood-Pedido (backend)](#aplicação-quickfood-pedido-backend)
   - [Funcionalidades Principais](#funcionalidades-principais)
   - [Estrutura do Projeto](#estrutura-do-projeto)
   - [Tecnologias Utilizadas](#tecnologias-utilizadas)
@@ -11,29 +11,29 @@
   - [Collection com todas as APIs com exemplos de requisição](#collection-com-todas-as-apis-com-exemplos-de-requisição)
   - [Desenho da arquitetura](#desenho-da-arquitetura)
   - [Demonstração em vídeo](#demonstração-em-vídeo)
+  - [Relatório de Cobertura](#relatório-de-cobertura)
   - [Autores](#autores)
   - [Documentação Adicional](#documentação-adicional)
+  - [Repositórios microserviços](#repositórios-microserviços)
+  - [Repositórios diversos](#repositórios-diversos)
 
 ---
 
-# Aplicação Quickfood (backend)
+# Aplicação Quickfood-Pedido (backend)
 
 Este projeto visa o desenvolvimento do backend para um software que simula um totem de auto-atendimento de uma lanchonete.<br>
-Utilizando a arquitetura limpa, .NET 8, SQL Server, Cognito, Docker e Kubernetes, o objetivo é criar uma base sólida e escalável para suportar as funcionalidades necessárias para um sistema de autoatendimento. <br>
+Utilizando a arquitetura limpa, .NET 8, SQL Server, Amazon SQS, Cognito, Docker e Kubernetes, o objetivo é criar uma base sólida e escalável para suportar as funcionalidades necessárias para um sistema de autoatendimento. <br>
 O foco principal é a criação de uma aplicação robusta, modular e de fácil manutenção.<br>
+Este microserviço tem como pricipal objetivo ser responsável pelos pedidos.<br>
 
 ## Funcionalidades Principais
 
 - **Gerenciamento de Pedidos**: Criação, atualização e consulta de pedidos feitos pelos clientes. <br>
-- **Gerenciamento de Cardápio**: Manutenção dos itens do cardápio, incluindo adição, remoção e atualização de produtos. <br>
-- **Gerenciamento de Cliente**: Manutenção dos cliente, incluindo adição, remoção e atualização de clientes. <br>
-- **Pagamento dos Pedidos**: Integração (fake) com gateway de pagamentos. <br>
 - **Armazenamento de Dados**: Persistência de dados utilizando um banco de dados adequado SQL Server. <br>
-- **Gerenciamento de Usuários**: Gestão de usuários (funcionários ou clientes) integrados com o Cognito, permitindo o cadastro, confirmação do e-mail e recuperação de senha. <br>
 
 ## Estrutura do Projeto
 
-A arquitetura limpa será utilizada para garantir que a aplicação seja modular e de fácil manutenção, o projeto foi estruturado da seguinte forma: API, Controllers, Gateways, Gateways.Cognito, Presenters, Domain, Infra (implementação das interfaces de repositório, configurações de banco de dados) e Building Blocks (componentes e serviços reutilizáveis)<br>
+A arquitetura limpa será utilizada para garantir que a aplicação seja modular e de fácil manutenção, o projeto foi estruturado da seguinte forma: API, Worker, Gateways, Presenters, Domain, Infra (implementação das interfaces de repositório, configurações de banco de dados) e Building Blocks (componentes e serviços reutilizáveis)<br>
 
 ## Tecnologias Utilizadas
 
@@ -45,6 +45,7 @@ A arquitetura limpa será utilizada para garantir que a aplicação seja modular
 
 ## Serviços Utilizados
 - **Cognito**: Gestão e autenticação de usuários. <br>
+- **Amazon SQS**: Mensageria utilizada a comunicação assíncrona entre os demais micro-serviços através de eventos. <br>
 - **Github Actions**: Todo o CI/CD é automatizado através de pipelines. <br>
 - **SonarQube**: Análise estática do código para promover qualidade. <br>
 
@@ -57,28 +58,28 @@ Como a aplicação não demanda um alto volume de leituras e escritas nem requer
 
 ### Clonar o repositório
 ```
-git clone https://github.com/SofArc6Soat/quickfood-backend.git
+git clone https://github.com/SofArc6Soat/quickfood-backend-pedido
 ```
 
 ### Executar com docker-compose
 1. Docker (docker-compose)
 1.1. Navegue até o diretório do projeto:
 ```
-cd quickfood-backend\src\DevOps
+cd quickfood-backend-pedido\src\DevOps
 ```
 2. Configure o ambiente Docker:
 ```
 docker-compose up --build
 ```
-2.1. A aplicação estará disponível em http://localhost:5000 ou https://localhost:5001
-2.2. URL do Swagger: http://localhost:5000/swagger ou https://localhost:5001/swagger
-2.3. URL do Healthcheck da API: http://localhost:5000/health ou https://localhost:5001/health
+2.1. A aplicação estará disponível em http://localhost:5000
+2.2. URL do Swagger: http://localhost:5000/swagger
+2.3. URL do Healthcheck da API: http://localhost:5000/health
 
 ### Executar com Kubernetes
 2. Kubernetes
 2.1. Navegue até o diretório do projeto:
 ```
-cd quickfood-backend\src\DevOps\kubernetes
+cd quickfood-backend-pedido\src\DevOps\kubernetes
 ```
 2.2. Configure o ambiente Docker:
 ```
@@ -105,7 +106,7 @@ Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process
 2.5. URL do Healthcheck da API: http://localhost:8080/health
 
 ## Collection com todas as APIs com exemplos de requisição
-1. Caso deseje testar via postman com dados fake importe o arquivo "API QuickFood.postman_collection" do diretorio "src/DevOps/postman" na aplicação postman local.
+1. Caso deseje testar via postman com dados fake importe o arquivo "API QuickFood - Pedido.postman_collection" do diretorio "src/DevOps/postman" na aplicação postman local.
 
 2. Também é possível utilizar o Swagger disponibilizado pela aplicação (URL do Swagger: http://localhost:8080/swagger).
 
@@ -120,44 +121,22 @@ Senha: A@cdE1460
 E-mail: joao-teste@gmail.com
 CPF: 08062759016
 Senha: B@cdE0943
-<br>
-- Cliente Maria (usuário com perfil cliente):
-E-mail: maria-teste@gmail.com
-CPF: 05827307084
-Senha: C@cdE0943
 
 2. POST - {{baseUrl}}/pedidos (criar um pedido)
-3. POST - {{baseUrl}}/pagamentos/checkout/:pedidoId (efetar checkout do pedido com integração fake para gerar o QRCODE do PIX)
-4. POST - {{baseUrl}}/pagamentos/notificacoes/:pedidoId (simulação do WebHook que recebe que o PIX foi pago)
-5. PATCH - {{baseUrl}}/pedidos/status/:pedidoId (altera status do pedido para "EmPreparacao" -> "Pronto" -> "Finalizado")
-
-Obs.:
-- Cadastrar um novo funcionário (usuário com perfil admin):
-POST - {{baseUrl}}/funcionarios
-
-- Efetuar login de funcionarios (será gerado um token JWT, utilizar a função lambda):
-POST - {{baseUrl}}/usuarios/funcionario/identifique-se
-
-- Cadastrar um novo cliente (usuário com perfil cliente):
-POST - {{baseUrl}}/clientes
-
-- Efetuar login de cliente (será gerado um token JWT, utilizar a função lambda):
-POST - {{baseUrl}}/usuarios/cliente/identifique-se
-
-- Sempre após o cadastro de um usuário, será enviado um email com o código de verificação. Para efetar a confirmação, acesse:
-POST - {{baseUrl}}/usuarios/email-verificacao:confirmar
-
-- Caso tenha esquecido a senha, acesse para poder prosseguir com a troca da senha:
-POST - {{baseUrl}}/usuarios/esquecia-senha:solicitar
-
-- Para redefinir sua senha, acesse:
-POST - {{baseUrl}}/usuarios/esquecia-senha:resetar
 
 ## Desenho da arquitetura
-Para visualizar o desenho da arquitetura abra o arquivo "Arquitetura.drawio.png" no diretório "arquitetura" ou importe o arquivo "Arquitetura.drawio" no Draw.io (https://app.diagrams.net/).
+Para visualizar o desenho da arquitetura abra o arquivo "Arquitetura-Infra.drawio.png" e "Arquitetura-Macro.drawio.png" no diretório "arquitetura" ou importe o arquivo "Arquitetura.drawio" no Draw.io (https://app.diagrams.net/).
 
 ## Demonstração em vídeo
-Para visualizar a demonstração da aplicação da Fase 2 acesse o seguinte link do Vimeo: https://vimeo.com/992479829/d8dba62df1
+Para visualizar a demonstração da aplicação da Fase 4:
+- Atualizações efetuadas na arquitetura e funcionamento da aplicação - Link do Vimeo: https://vimeo.com/1035834011/b81ec2a555?share=copy
+- Processo de deploy e execução das pipelines - Link do Vimeo: https://vimeo.com/1035833239/2087c9debd?share=copy
+
+ ## Relatório de Cobertura
+Para visualizar o relatório de cobertura de código, abra o arquivo [index.html](src\DevOps\coverageReport\index.html) localizado no diretório `coverage`.
+ ```
+ src\DevOps\coverageReport\index.html
+ ```
 
 ## Autores
 
@@ -170,3 +149,17 @@ Para visualizar a demonstração da aplicação da Fase 2 acesse o seguinte link
 - **Github - Domain Storytelling**: [Link para o Domain Storytelling](https://github.com/SofArc6Soat/quickfood-domain-story-telling)
 - **Github - Context Map**: [Link para o Domain Storytelling](https://github.com/SofArc6Soat/quickfood-ubiquitous-language)
 - **Github - Linguagem Ubíqua**: [Link para o Domain Storytelling](https://github.com/SofArc6Soat/quickfood-ubiquitous-language)
+
+## Repositórios microserviços
+
+- **QuickFood Backoffice**: [Link](https://github.com/SofArc6Soat/quickfood-backend-backoffice)
+- **QuickFood Pedido**: [Link](https://github.com/SofArc6Soat/quickfood-backend-pedido)
+- **QuickFood Pagamento**: [Link](https://github.com/SofArc6Soat/quickfood-backend-pagamento)
+- **QuickFood Producao**: [Link](https://github.com/SofArc6Soat/quickfood-backend-producao)
+
+## Repositórios diversos
+
+- **QuickFood (monolito)**: [Link](https://github.com/SofArc6Soat/quickfood-backend)
+- **Terraform Kubernetes**: [Link](https://github.com/SofArc6Soat/quickfood-terraform-kubernetes)
+- **Terraform Database**: [Link](https://github.com/SofArc6Soat/quickfood-terraform-database)
+- **Lambda Autenticação**: [Link](https://github.com/SofArc6Soat/quickfood-auth-function)
