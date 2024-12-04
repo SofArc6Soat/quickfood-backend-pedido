@@ -1,4 +1,5 @@
-﻿using Amazon.CognitoIdentityProvider;
+﻿using Amazon;
+using Amazon.CognitoIdentityProvider;
 using Core.Domain.Notificacoes;
 using Core.WebApi.Configurations;
 using Core.WebApi.GlobalErrorMiddleware;
@@ -52,7 +53,10 @@ namespace Core.WebApi.DependencyInjection
                 // Política para usuários que pertencem a "admin" ou "cliente"
                 .AddPolicy("AdminOrClienteRole", policy => policy.RequireRole("admin", "cliente"));
 
-            services.AddAWSService<IAmazonCognitoIdentityProvider>();
+            services.AddAWSService<IAmazonCognitoIdentityProvider>(new Amazon.Extensions.NETCore.Setup.AWSOptions
+            {
+                Region = RegionEndpoint.USEast1 // Substitua pela região apropriada
+            });
         }
 
         public static void UseApiDefautConfig(this IApplicationBuilder app)

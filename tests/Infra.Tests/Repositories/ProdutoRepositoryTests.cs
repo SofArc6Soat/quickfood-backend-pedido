@@ -1,159 +1,161 @@
 ﻿using Core.Domain.Data;
 using Domain.Tests.TestHelpers;
+using Infra.Context;
 using Infra.Dto;
 using Infra.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Moq;
 
 namespace Infra.Tests.Repositories;
 
 public class ProdutoRepositoryTests
 {
-    private readonly Mock<IProdutoRepository> _mockProdutoRepository;
-    private readonly Mock<IUnitOfWork> _mockUnitOfWork;
+    private ProdutoRepository _produtoRepository;
+    private ApplicationDbContext _context;
 
-    public ProdutoRepositoryTests()
+    private void SetupInMemoryDatabase()
     {
-        _mockProdutoRepository = new Mock<IProdutoRepository>();
-        _mockUnitOfWork = new Mock<IUnitOfWork>();
-        _mockProdutoRepository.Setup(repo => repo.UnitOfWork).Returns(_mockUnitOfWork.Object);
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+
+        _context = new ApplicationDbContext(options);
+        _produtoRepository = new ProdutoRepository(_context);
     }
 
     [Fact]
-    public async Task ObterTodosProdutosAsync_DeveRetornarListaDeProdutos()
+    public async Task ObterTodosProdutosAsync_Should_ReturnAllActiveProducts()
     {
         // Arrange
-        var produtosDb = new List<ProdutoDb>
+        SetupInMemoryDatabase();
+
+        var produtos = new List<ProdutoDb>
             {
-                ProdutoFakeDataFactory.CriarProdutoDbValido(),
-                ProdutoFakeDataFactory.CriarProdutoDbValido2()
+                new ProdutoDb { Id = Guid.NewGuid(), Nome = "Produto 1", Descricao = "Descrição 1", Preco = 10.0m, Categoria = "Categoria 1", Ativo = true },
+                new ProdutoDb { Id = Guid.NewGuid(), Nome = "Produto 2", Descricao = "Descrição 2", Preco = 20.0m, Categoria = "Categoria 2", Ativo = true },
+                new ProdutoDb { Id = Guid.NewGuid(), Nome = "Produto 3", Descricao = "Descrição 3", Preco = 30.0m, Categoria = "Categoria 3", Ativo = false }
             };
-        var cancellationToken = CancellationToken.None;
-
-        _mockProdutoRepository.Setup(x => x.ObterTodosProdutosAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(produtosDb);
+        await _context.Set<ProdutoDb>().AddRangeAsync(produtos);
+        await _context.SaveChangesAsync();
 
         // Act
-        var resultado = await _mockProdutoRepository.Object.ObterTodosProdutosAsync(cancellationToken);
+        var result = await _produtoRepository.ObterTodosProdutosAsync(CancellationToken.None);
 
         // Assert
-        Assert.NotNull(resultado);
-        Assert.Equal(2, resultado.Count());
-        _mockProdutoRepository.Verify(x => x.ObterTodosProdutosAsync(It.IsAny<CancellationToken>()), Times.Once);
+        Assert.Equal(2, result.Count());
+        Assert.Contains(result, p => p.Nome == "Produto 1");
+        Assert.Contains(result, p => p.Nome == "Produto 2");
+        Assert.DoesNotContain(result, p => p.Nome == "Produto 3");
     }
 
     [Fact]
-    public async Task ObterTodosProdutosAsync_DeveLancarExcecao_QuandoOcorreErro()
+    public async Task FindByIdAsync_Should_ReturnProduct_When_ProductExists()
     {
         // Arrange
-        var cancellationToken = CancellationToken.None;
+        SetupInMemoryDatabase();
 
-        _mockProdutoRepository.Setup(x => x.ObterTodosProdutosAsync(It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new Exception("Erro ao obter todos os produtos"));
-
-        // Act & Assert
-        var exception = await Assert.ThrowsAsync<Exception>(() => _mockProdutoRepository.Object.ObterTodosProdutosAsync(cancellationToken));
-        Assert.Equal("Erro ao obter todos os produtos", exception.Message);
-        _mockProdutoRepository.Verify(x => x.ObterTodosProdutosAsync(It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task FindByIdAsync_DeveRetornarProdutoPorId()
-    {
-        // Arrange
-        var produtoDb = ProdutoFakeDataFactory.CriarProdutoDbValido();
-        var cancellationToken = CancellationToken.None;
-
-        _mockProdutoRepository.Setup(x => x.FindByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(produtoDb);
+        var produtoId = Guid.NewGuid();
+        var produto = new ProdutoDb { Id = produtoId, Nome = "Produto Teste", Descricao = "Descrição Teste", Preco = 100.0m, Categoria = "Categoria Teste", Ativo = true };
+        await _context.Set<ProdutoDb>().AddAsync(produto);
+        await _context.SaveChangesAsync();
 
         // Act
-        var resultado = await _mockProdutoRepository.Object.FindByIdAsync(produtoDb.Id, cancellationToken);
+        var result = await _produtoRepository.FindByIdAsync(produtoId, CancellationToken.None);
 
         // Assert
-        Assert.NotNull(resultado);
-        Assert.Equal(produtoDb.Id, resultado.Id);
-        _mockProdutoRepository.Verify(x => x.FindByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Once);
+        Assert.NotNull(result);
+        Assert.Equal(produtoId, result.Id);
     }
 
     [Fact]
-    public async Task FindByIdAsync_DeveLancarExcecao_QuandoOcorreErro()
+    public async Task FindByIdAsync_Should_ReturnNull_When_ProductDoesNotExist()
     {
         // Arrange
-        var produtoId = ProdutoFakeDataFactory.ObterGuid();
-        var cancellationToken = CancellationToken.None;
+        SetupInMemoryDatabase();
 
-        _mockProdutoRepository.Setup(x => x.FindByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new Exception("Erro ao encontrar produto por ID"));
-
-        // Act & Assert
-        var exception = await Assert.ThrowsAsync<Exception>(() => _mockProdutoRepository.Object.FindByIdAsync(produtoId, cancellationToken));
-        Assert.Equal("Erro ao encontrar produto por ID", exception.Message);
-        _mockProdutoRepository.Verify(x => x.FindByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task InsertAsync_DeveInserirProduto()
-    {
-        // Arrange
-        var produtoDb = ProdutoFakeDataFactory.CriarProdutoDbValido();
-        var cancellationToken = CancellationToken.None;
-
-        _mockProdutoRepository.Setup(x => x.InsertAsync(It.IsAny<ProdutoDb>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
+        var produtoId = Guid.NewGuid();
 
         // Act
-        await _mockProdutoRepository.Object.InsertAsync(produtoDb, cancellationToken);
+        var result = await _produtoRepository.FindByIdAsync(produtoId, CancellationToken.None);
 
         // Assert
-        _mockProdutoRepository.Verify(x => x.InsertAsync(It.IsAny<ProdutoDb>(), It.IsAny<CancellationToken>()), Times.Once);
+        Assert.Null(result);
     }
 
     [Fact]
-    public async Task InsertAsync_DeveLancarExcecao_QuandoOcorreErro()
+    public async Task InsertAsync_Should_AddProduct()
     {
         // Arrange
-        var produtoDb = ProdutoFakeDataFactory.CriarProdutoDbValido();
-        var cancellationToken = CancellationToken.None;
+        SetupInMemoryDatabase();
 
-        _mockProdutoRepository.Setup(x => x.InsertAsync(It.IsAny<ProdutoDb>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new Exception("Erro ao inserir produto"));
-
-        // Act & Assert
-        var exception = await Assert.ThrowsAsync<Exception>(() => _mockProdutoRepository.Object.InsertAsync(produtoDb, cancellationToken));
-        Assert.Equal("Erro ao inserir produto", exception.Message);
-        _mockProdutoRepository.Verify(x => x.InsertAsync(It.IsAny<ProdutoDb>(), It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task DeleteAsync_DeveDeletarProduto()
-    {
-        // Arrange
-        var produtoDb = ProdutoFakeDataFactory.CriarProdutoDbValido();
-        var cancellationToken = CancellationToken.None;
-
-        _mockProdutoRepository.Setup(x => x.DeleteAsync(It.IsAny<ProdutoDb>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
+        var produto = new ProdutoDb { Id = Guid.NewGuid(), Nome = "Produto Teste", Descricao = "Descrição Teste", Preco = 100.0m, Categoria = "Categoria Teste", Ativo = true };
 
         // Act
-        await _mockProdutoRepository.Object.DeleteAsync(produtoDb, cancellationToken);
+        await _produtoRepository.InsertAsync(produto, CancellationToken.None);
+        await _context.SaveChangesAsync();
 
         // Assert
-        _mockProdutoRepository.Verify(x => x.DeleteAsync(It.IsAny<ProdutoDb>(), It.IsAny<CancellationToken>()), Times.Once);
+        var result = await _context.Set<ProdutoDb>().FindAsync(produto.Id);
+        Assert.NotNull(result);
+        Assert.Equal(produto.Nome, result.Nome);
     }
 
     [Fact]
-    public async Task DeleteAsync_DeveLancarExcecao_QuandoOcorreErro()
+    public async Task UpdateAsync_Should_UpdateProduct()
     {
         // Arrange
-        var produtoDb = ProdutoFakeDataFactory.CriarProdutoDbValido();
-        var cancellationToken = CancellationToken.None;
+        SetupInMemoryDatabase();
 
-        _mockProdutoRepository.Setup(x => x.DeleteAsync(It.IsAny<ProdutoDb>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new Exception("Erro ao deletar produto"));
+        var produto = new ProdutoDb { Id = Guid.NewGuid(), Nome = "Produto Teste", Descricao = "Descrição Teste", Preco = 100.0m, Categoria = "Categoria Teste", Ativo = true };
+        await _context.Set<ProdutoDb>().AddAsync(produto);
+        await _context.SaveChangesAsync();
 
-        // Act & Assert
-        var exception = await Assert.ThrowsAsync<Exception>(() => _mockProdutoRepository.Object.DeleteAsync(produtoDb, cancellationToken));
-        Assert.Equal("Erro ao deletar produto", exception.Message);
-        _mockProdutoRepository.Verify(x => x.DeleteAsync(It.IsAny<ProdutoDb>(), It.IsAny<CancellationToken>()), Times.Once);
+        produto.Nome = "Produto Atualizado";
+
+        // Act
+        await _produtoRepository.UpdateAsync(produto, CancellationToken.None);
+        await _context.SaveChangesAsync();
+
+        // Assert
+        var result = await _context.Set<ProdutoDb>().FindAsync(produto.Id);
+        Assert.NotNull(result);
+        Assert.Equal("Produto Atualizado", result.Nome);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_Should_RemoveProduct()
+    {
+        // Arrange
+        SetupInMemoryDatabase();
+
+        var produto = new ProdutoDb { Id = Guid.NewGuid(), Nome = "Produto Teste", Descricao = "Descrição Teste", Preco = 100.0m, Categoria = "Categoria Teste", Ativo = true };
+        await _context.Set<ProdutoDb>().AddAsync(produto);
+        await _context.SaveChangesAsync();
+
+        // Act
+        await _produtoRepository.DeleteAsync(produto.Id, CancellationToken.None);
+        await _context.SaveChangesAsync();
+
+        // Assert
+        var result = await _context.Set<ProdutoDb>().FindAsync(produto.Id);
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task CommitAsync_Should_CommitTransaction()
+    {
+        // Arrange
+        SetupInMemoryDatabase();
+
+        var produto = new ProdutoDb { Id = Guid.NewGuid(), Nome = "Produto Teste", Descricao = "Descrição Teste", Preco = 100.0m, Categoria = "Categoria Teste", Ativo = true };
+        await _context.Set<ProdutoDb>().AddAsync(produto);
+
+        // Act
+        var result = await _context.CommitAsync(CancellationToken.None);
+
+        // Assert
+        Assert.True(result);
+        var savedProduct = await _context.Set<ProdutoDb>().FindAsync(produto.Id);
+        Assert.NotNull(savedProduct);
     }
 }
